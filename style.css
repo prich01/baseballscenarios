@@ -1,0 +1,68 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+}
+
+.container { text-align: center; width: 100%; max-width: 800px; }
+
+/* Scoreboard Styling */
+.scoreboard {
+    background-color: #222;
+    color: #ffd700;
+    padding: 15px;
+    border-radius: 8px;
+    border: 4px solid #444;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 15px;
+    box-shadow: inset 0 0 10px #000;
+}
+
+.score-row, .scenario-row { display: flex; justify-content: space-around; margin-bottom: 8px; }
+.scenario-row { border-top: 1px solid #444; padding-top: 8px; margin-bottom: 0; }
+.score-item .label { display: block; font-size: 0.75em; color: #aaa; }
+.score-item div { font-size: 1.2em; font-weight: bold; }
+
+/* Runners & Notes */
+.runner-reservoir { background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+.runner-storage { display: flex; justify-content: center; gap: 15px; height: 40px; }
+.notes-label { font-weight: bold; font-size: 0.9em; color: #444; }
+#coaching-notes { width: 100%; height: 60px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; resize: none; margin-top: 5px; }
+
+/* Field Elements */
+#field-container {
+    position: relative; width: 600px; height: 600px;
+    background-color: #4CAF50; margin: 0 auto;
+    border: 4px solid #333; border-radius: 10px; overflow: hidden;
+}
+
+.foul-line { position: absolute; background-color: white; width: 4px; height: 800px; bottom: 50px; left: 50%; transform-origin: bottom center; }
+.first-base-line { transform: translate(-50%, 0) rotate(45deg); }
+.third-base-line { transform: translate(-50%, 0) rotate(-45deg); }
+.infield-dirt { position: absolute; width: 220px; height: 220px; background-color: #8D6E63; top: 350px; left: 50%; transform: translate(-50%, -50%) rotate(45deg); border-radius: 5px; }
+.pitchers-mound { position: absolute; width: 24px; height: 24px; background-color: #8D6E63; border-radius: 50%; top: 350px; left: 50%; transform: translate(-50%, -50%); border: 2px solid white; }
+.base { position: absolute; width: 18px; height: 18px; background-color: white; transform: translate(-50%, -50%) rotate(45deg); z-index: 1; }
+.home-plate { position: absolute; bottom: 45px; left: 50%; width: 20px; height: 20px; background-color: white; transform: translate(-50%, 0) rotate(45deg); z-index: 1; }
+.second-base { top: 195px; left: 50%; }
+.first-base { top: 350px; left: calc(50% + 155px); }
+.third-base { top: 350px; left: calc(50% - 155px); }
+
+/* Players & Runners */
+.player {
+    position: absolute; width: 34px; height: 34px; background: #fff; border: 3px solid #1976D2;
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+    font-weight: bold; cursor: grab; z-index: 20;
+}
+.player.runner { position: static; border-color: #d32f2f; color: #d32f2f; background: #ffebee; transition: top 0.4s, left 0.4s; }
+#field-container .player.runner { position: absolute; }
+
+/* Controls */
+.controls { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+button, .upload-label { padding: 10px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; }
+.upload-label { background: #4CAF50; color: white; }
+#new-scenario-btn { background: #1976D2; color: white; }
+#save-btn { background: #2e7d32; color: white; }
+#excel-upload { display: none; }

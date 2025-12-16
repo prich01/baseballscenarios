@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball Strategy - Random & Clean</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* CSS remains consistent with previous versions */
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #cfd8dc; margin: 0; padding: 10px; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+        .main-wrapper { display: flex; flex-direction: column; width: 100vw; max-width: 1200px; height: 98vh; gap: 10px; }
+        .top-section { display: flex; flex: 1; gap: 15px; min-height: 0; }
+        .left-panel { flex: 0 0 300px; display: flex; flex-direction: column; gap: 10px; }
+        .box { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .scoreboard { background-color: #1a1a1a; color: #ffd700; padding: 12px; border-radius: 8px; border: 3px solid #333; font-family: 'Courier New', monospace; }
+        .score-row, .scenario-row { display: flex; justify-content: space-around; margin-bottom: 5px; text-align: center; }
+        .val { font-size: 16px; color: #ffd700; display: block; font-weight: bold; min-height: 20px; }
+        .right-panel { flex: 1; display: flex; justify-content: center; align-items: center; background: #9e9e9e; border-radius: 8px; padding: 15px; }
+        #field-container { position: relative; width: 100%; height: 100%; max-width: 850px; max-height: 450px; background-color: #2e7d32; border: 4px solid #212121; border-radius: 4px; overflow: hidden; }
+        .foul-line { position: absolute; background-color: rgba(255,255,255,0.9); width: 2px; height: 1000px; top: 388px; left: 50%; transform-origin: top center; z-index: 1; }
+        .first-base-line { transform: translate(-50%, 0) rotate(135deg) translateX(22px); }
+        .third-base-line { transform: translate(-50%, 0) rotate(-135deg) translateX(-22px); }
+        .infield-dirt { position: absolute; width: 150px; height: 150px; background-color: #8d6e63; top: 295px; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
+        .base { position: absolute; width: 14px; height: 14px; background-color: white; transform: translate(-50%, -50%) rotate(45deg); z-index: 2; }
+        .second-base { top: 195px; left: 50%; }
+        .first-base { top: 295px; left: calc(50% + 105px); }
+        .third-base { top: 295px; left: calc(50% - 105px); }
+        .home-plate { position: absolute; top: 390px; left: 50%; width: 20px; height: 20px; background-color: white; transform: translate(-50%, -100%); clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 50% 100%, 0% 50%); z-index: 2; }
+        .player { position: absolute; width: 30px; height: 30px; background: white; border: 2px solid #0d47a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 11px; cursor: grab; z-index: 20; }
+        .player.runner { position: static; border: 2px solid #b71c1c; color: #b71c1c; background: #ffebee; }
+        #field-container .player.runner { position: absolute; }
+        .bottom-panel { height: 110px; background: white; padding: 10px; border-radius: 8px; flex-shrink: 0; }
+        #coaching-notes { width: 100%; height: 100%; resize: none; border: 1px solid #ccc; padding: 10px; border-radius: 4px; font-family: inherit; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
+        button, .upload-label { padding: 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; text-align: center; }
+        .upload-label { background: #388e3c; color: white; }
+        #new-scenario-btn { background: #1565c0; color: white; }
+        #save-btn { background: #2e7d32; color: white; }
+        #reset-btn { background: #616161; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="top-section">
+        <div class="left-panel">
+            <div class="scoreboard">
+                <div class="score-row">
+                    <div class="score-item">INN<span class="val" id="disp-inning">-</span></div>
+                    <div class="score-item">VIS:HOME<span class="val" id="disp-score">-</span></div>
+                    <div class="score-item">OUTS<span class="val" id="disp-outs">-</span></div>
+                </div>
+                <div class="scenario-row"><div class="score-item">RUNNERS<span class="val" id="disp-runners">-</span></div></div>
+                <div class="scenario-row"><div class="score-item">SITUATION<span class="val" id="disp-bip" style="color:#64ffda; font-size:11px;">Ready</span></div></div>
+            </div>
+            <div class="box">
+                <div class="runner-storage" style="display:flex; gap:10px; justify-content:center;">
+                    <div class="player runner" id="r1">R1</div>
+                    <div class="player runner" id="r2">R2</div>
+                    <div class="player runner" id="r3">R3</div>
+                </div>
+            </div>
+            <div class="controls">
+                <label for="excel-upload" class="upload-label">📁 Upload Excel</label>
+                <input type="file" id="excel-upload" style="display:none" accept=".xlsx, .xls" />
+                <button id="new-scenario-btn">🔄 Next Random Play</button>
+                <button id="save-btn">📸 Save Image</button>
+                <button id="reset-btn">🧹 Reset Field</button>
+            </div>
+            <div id="upload-status" style="font-size:10px; text-align:center; padding-top:5px;">Ready</div>
+        </div>
+
+        <div class="right-panel">
+            <div id="field-container">
+                <div class="foul-line first-base-line"></div>
+                <div class="foul-line third-base-line"></div>
+                <div class="infield-dirt"></div>
+                <div class="base first-base"></div>
+                <div class="base second-base"></div>
+                <div class="base third-base"></div>
+                <div id="hp-graphic" class="home-plate"></div>
+                <div class="player" id="p">P</div><div class="player" id="c">C</div>
+                <div class="player" id="1b">1B</div><div class="player" id="2b">2B</div>
+                <div class="player" id="3b">3B</div><div class="player" id="ss">SS</div>
+                <div class="player" id="lf">LF</div><div class="player" id="cf">CF</div><div class="player" id="rf">RF</div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-panel"><textarea id="coaching-notes" placeholder="Coaching notes..."></textarea></div>
+</div>
+
+<script>
+    const field = document.getElementById('field-container');
+    const baseCoords = { "1st": { x: 530, y: 295 }, "2nd": { x: 425, y: 195 }, "3rd": { x: 320, y: 295 } };
+    const initialPositions = {
+        'p': {x:425, y:295}, 'c': {x:425, y:380}, 'cf': {x:425, y:45},
+        '1b': {x:530, y:280}, '3b': {x:320, y:280}, '2b': {x:480, y:210},
+        'ss': {x:370, y:210}, 'rf': {x:563, y:100}, 'lf': {x:287, y:100}
+    };
+
+    let scenarios = [];
+    let scenarioIndex = 0;
+    let activePlayer = null;
+    let offset = { x: 0, y: 0 };
+
+    function setPos(el, x, y) { el.style.left = (x - 15) + 'px'; el.style.top = (y - 15) + 'px'; }
+
+    // Fixes "04:02" -> "4:2" and "04" -> "4"
+    function cleanLeadingZeros(val) {
+        if (!val) return "-";
+        if (val.includes(":")) {
+            return val.split(":").map(part => parseInt(part, 10).toString()).join(":");
+        }
+        return isNaN(val) ? val : parseInt(val, 10).toString();
+    }
+
+    function shuffleScenarios(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function autoPlaceRunners(text) {
+        const r1 = document.getElementById('r1');
+        const r2 = document.getElementById('r2');
+        const r3 = document.getElementById('r3');
+        const storage = document.querySelector('.runner-storage');
+        [r1, r2, r3].forEach(r => { r.style.position = 'static'; storage.appendChild(r); });
+
+        const low = text.toUpperCase();
+        if (low.includes("BASES LOADED") || low.includes("LOADED")) {
+            moveR(r1, "1st"); moveR(r2, "2nd"); moveR(r3, "3rd");
+        } else {
+            if (low.includes("1B")) moveR(r1, "1st");
+            if (low.includes("2B")) moveR(r2, "2nd");
+            if (low.includes("3B")) moveR(r3, "3rd");
+        }
+    }
+
+    function moveR(el, base) {
+        el.style.position = 'absolute';
+        field.appendChild(el);
+        setPos(el, baseCoords[base].x, baseCoords[base].y);
+    }
+
+    function getVal(row, keys) {
+        for (let k of keys) {
+            let found = Object.keys(row).find(rk => rk.toLowerCase().trim() === k.toLowerCase());
+            if (found) return row[found].toString();
+        }
+        return "-";
+    }
+
+    function display(s) {
+        document.getElementById('disp-inning').innerText = cleanLeadingZeros(s.inning);
+        document.getElementById('disp-score').innerText = cleanLeadingZeros(s.score);
+        document.getElementById('disp-outs').innerText = cleanLeadingZeros(s.outs);
+        document.getElementById('disp-runners').innerText = s.runners;
+        document.getElementById('disp-bip').innerText = s.bip;
+        autoPlaceRunners(s.runners);
+    }
+
+    function init() {
+        for (const id in initialPositions) setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
+
+        document.getElementById('excel-upload').addEventListener('change', (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const workbook = XLSX.read(new Uint8Array(ev.target.result), {type: 'array'});
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { raw: false, defval: "" });
+                
+                scenarios = json.map(row => ({
+                    inning: getVal(row, ['inning', 'inn']),
+                    score: getVal(row, ['score', 'runs']),
+                    outs: getVal(row, ['outs', 'out']),
+                    runners: getVal(row, ['runners', 'on base']),
+                    bip: getVal(row, ['situation', 'bip', 'play'])
+                }));
+                
+                shuffleScenarios(scenarios); // RANDOMIZE ON LOAD
+                scenarioIndex = 0;
+                document.getElementById('upload-status').innerText = `Shuffled ${scenarios.length} Plays!`;
+                if(scenarios.length > 0) display(scenarios[0]);
+            };
+            reader.readAsArrayBuffer(e.target.files[0]);
+        });
+
+        document.getElementById('new-scenario-btn').addEventListener('click', () => {
+            if (scenarios.length) {
+                scenarioIndex = (scenarioIndex + 1) % scenarios.length;
+                display(scenarios[scenarioIndex]);
+            }
+        });
+
+        // Draggable
+        const drag = (e) => {
+            activePlayer = e.target;
+            if (activePlayer.classList.contains('runner') && activePlayer.style.position !== 'absolute') {
+                activePlayer.style.position = 'absolute';
+                field.appendChild(activePlayer);
+            }
+            const p = (e.touches ? e.touches[0] : e);
+            const r = activePlayer.getBoundingClientRect();
+            offset = { x: p.clientX - (r.left + r.width/2), y: p.clientY - (r.top + r.height/2) };
+        };
+        document.querySelectorAll('.player').forEach(p => {
+            p.addEventListener('mousedown', drag);
+            p.addEventListener('touchstart', drag);
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!activePlayer) return;
+            const p = (e.touches ? e.touches[0] : e);
+            const r = field.getBoundingClientRect();
+            setPos(activePlayer, p.clientX - r.left - offset.x, p.clientY - r.top - offset.y);
+        });
+        document.addEventListener('mouseup', () => activePlayer = null);
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            for (const id in initialPositions) setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
+            autoPlaceRunners("None");
+        });
+    }
+    init();
+</script>
+</body>
+</html>
