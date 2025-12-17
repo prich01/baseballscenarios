@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baseball Strategy - Final Alignment v1.6</title>
+    <title>Baseball Strategy - Responsive v1.7</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -15,10 +15,17 @@
         
         .top-section { display: flex; flex-direction: row; gap: 15px; }
         .left-panel { flex: 0 0 300px; display: flex; flex-direction: column; gap: 10px; }
-        .right-panel { flex: 1; display: flex; justify-content: center; align-items: center; background: #9e9e9e; border-radius: 8px; padding: 10px; }
+        .right-panel { 
+            flex: 1; display: flex; justify-content: center; align-items: center; 
+            background: #9e9e9e; border-radius: 8px; padding: 10px; min-height: 350px;
+        }
 
+        /* FLEXIBLE FIELD CONTAINER */
         #field-container { 
-            position: relative; width: 850px; height: 450px; 
+            position: relative; 
+            width: 100%; 
+            aspect-ratio: 850 / 450;
+            max-width: 850px;
             background-color: #2e7d32; border: 4px solid #212121; border-radius: 4px; 
             overflow: hidden; touch-action: none; user-select: none;
         }
@@ -26,7 +33,7 @@
         @media (max-width: 850px) {
             .top-section { flex-direction: column; }
             .left-panel { width: 100%; }
-            #field-container { transform: scale(0.42); transform-origin: top center; margin-bottom: -240px; }
+            .right-panel { padding: 5px; min-height: auto; }
         }
 
         .box { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -35,21 +42,34 @@
         .val { font-size: 16px; color: #ffd700; display: block; font-weight: bold; min-height: 20px; }
         .ver-tag { position: absolute; bottom: 3px; right: 5px; font-size: 8px; color: #444; }
 
-        .player { position: absolute; width: 30px; height: 30px; background: white; border: 2px solid #0d47a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 11px; z-index: 20; touch-action: none; cursor: grab; }
-        .player.runner { position: static; border: 2px solid #b71c1c; color: #b71c1c; background: #ffebee; }
-        #field-container .player.runner { position: absolute; }
-        .ball { position: absolute; width: 18px; height: 18px; background: white; border: 1px solid #ccc; border-radius: 50%; z-index: 30; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); touch-action: none; display: flex; justify-content: center; align-items: center; cursor: grab; }
+        /* Icons scale based on field width % */
+        .player { 
+            position: absolute; width: 4%; aspect-ratio: 1/1; min-width: 24px;
+            background: white; border: 2px solid #0d47a1; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            font-weight: bold; font-size: 11px; z-index: 20; touch-action: none; cursor: grab; 
+        }
+        .player.runner { position: static; border: 2px solid #b71c1c; color: #b71c1c; background: #ffebee; width: 30px; height: 30px; }
+        #field-container .player.runner { position: absolute; width: 4%; }
+        
+        .ball { 
+            position: absolute; width: 2.5%; aspect-ratio: 1/1; min-width: 16px;
+            background: white; border: 1px solid #ccc; border-radius: 50%; 
+            z-index: 30; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); 
+            touch-action: none; display: flex; justify-content: center; align-items: center; cursor: grab; 
+        }
         .ball::before { content: ')('; color: red; font-size: 8px; font-weight: bold; transform: rotate(45deg); }
 
-        .infield-dirt { position: absolute; width: 150px; height: 150px; background-color: #8d6e63; top: 295px; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
-        .base { position: absolute; width: 14px; height: 14px; background-color: white; transform: translate(-50%, -50%) rotate(45deg); z-index: 2; }
-        .second-base { top: 195px; left: 50%; }
-        .first-base { top: 295px; left: calc(50% + 105px); }
-        .third-base { top: 295px; left: calc(50% - 105px); }
-        .home-plate { position: absolute; top: 390px; left: 50%; width: 20px; height: 20px; background-color: white; transform: translate(-50%, -100%); clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 50% 100%, 0% 50%); z-index: 2; }
+        /* Field Visuals using % */
+        .infield-dirt { position: absolute; width: 20%; aspect-ratio: 1/1; background-color: #8d6e63; top: 65%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); }
+        .base { position: absolute; width: 2%; aspect-ratio: 1/1; background-color: white; transform: translate(-50%, -50%) rotate(45deg); z-index: 2; }
+        .second-base { top: 43%; left: 50%; }
+        .first-base { top: 65%; left: 63%; }
+        .third-base { top: 65%; left: 37%; }
+        .home-plate { position: absolute; top: 87%; left: 50%; width: 2.5%; aspect-ratio: 1/1; background-color: white; transform: translate(-50%, -100%); clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 50% 100%, 0% 50%); z-index: 2; }
 
-        .bottom-panel { height: 110px; background: white; padding: 10px; border-radius: 8px; margin-top: 10px; }
-        #coaching-notes { width: 100%; height: 100%; resize: none; border: 1px solid #ccc; padding: 10px; border-radius: 4px; font-family: inherit; }
+        .bottom-panel { min-height: 110px; background: white; padding: 10px; border-radius: 8px; margin-top: 10px; }
+        #coaching-notes { width: 100%; height: 80px; resize: none; border: 1px solid #ccc; padding: 10px; border-radius: 4px; font-family: inherit; }
         
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
         button, .upload-label { padding: 12px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; text-align: center; }
@@ -72,7 +92,7 @@
                 </div>
                 <div class="scenario-row"><div class="score-item">RUNNERS<span class="val" id="disp-runners">-</span></div></div>
                 <div class="scenario-row"><div class="score-item">SITUATION<span class="val" id="disp-bip" style="color:#64ffda; font-size:12px;">Ready</span></div></div>
-                <div class="ver-tag">v1.6</div>
+                <div class="ver-tag">v1.7</div>
             </div>
             <div class="box">
                 <div class="runner-storage" style="display:flex; gap:10px; justify-content:center;">
@@ -115,24 +135,39 @@
     const field = document.getElementById('field-container');
     const storage = document.querySelector('.runner-storage');
     
-    // COORDINATES: Pushed 5px Right from v1.5
-    const baseCoords = { "1st": { x: 525, y: 295 }, "2nd": { x: 420, y: 195 }, "3rd": { x: 315, y: 295 } };
+    // POSITIONS AS PERCENTAGES (X%, Y%) for perfect scaling
+    const baseCoords = { "1st": { x: 63, y: 65 }, "2nd": { x: 50, y: 43 }, "3rd": { x: 37, y: 65 } };
     const initialPositions = {
-        'p': {x:420, y:295}, 'c': {x:420, y:380}, 'cf': {x:420, y:45},
-        '1b': {x:525, y:280}, '3b': {x:315, y:280}, '2b': {x:475, y:210},
-        'ss': {x:365, y:210}, 'rf': {x:558, y:100}, 'lf': {x:282, y:100},
-        'baseball': {x:420, y:420}
+        'p': {x:50, y:65}, 'c': {x:50, y:85}, 'cf': {x:50, y:10},
+        '1b': {x:62, y:62}, '3b': {x:38, y:62}, '2b': {x:56, y:46},
+        'ss': {x:44, y:46}, 'rf': {x:66, y:22}, 'lf': {x:34, y:22},
+        'baseball': {x:50, y:93}
     };
 
-    let scenarios = [];
-    let scenarioIndex = 0;
     let activeItem = null;
 
     function setPos(el, x, y) {
-        const offset = el.classList.contains('ball') ? 9 : 15;
-        el.style.left = (x - offset) + 'px'; 
-        el.style.top = (y - offset) + 'px';
+        // We now use percentages so it works on any screen size
+        el.style.left = `calc(${x}% - ${el.offsetWidth / 2}px)`;
+        el.style.top = `calc(${y}% - ${el.offsetHeight / 2}px)`;
     }
+
+    const onMove = (e) => {
+        if (!activeItem) return;
+        const rect = field.getBoundingClientRect();
+        
+        // Convert mouse/touch position to a 0-100 percentage of the field
+        let xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        let yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+        // Keep them inside the field
+        xPercent = Math.max(2, Math.min(98, xPercent));
+        yPercent = Math.max(2, Math.min(98, yPercent));
+
+        activeItem.dataset.x = xPercent;
+        activeItem.dataset.y = yPercent;
+        setPos(activeItem, xPercent, yPercent);
+    };
 
     const onDown = (e) => {
         const target = e.target.closest('.player, .ball');
@@ -144,94 +179,49 @@
         activeItem.setPointerCapture(e.pointerId); e.preventDefault();
     };
 
-    const onMove = (e) => {
-        if (!activeItem) return;
-        const rect = field.getBoundingClientRect();
-        const scale = rect.width / 850; 
-        const x = (e.clientX - rect.left) / scale;
-        const y = (e.clientY - rect.top) / scale;
-        setPos(activeItem, x, y);
-    };
-
-    const onUp = (e) => { if (activeItem) { activeItem.releasePointerCapture(e.pointerId); activeItem = null; } };
+    const onUp = (e) => { activeItem = null; };
 
     function init() {
-        for (const id in initialPositions) setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
+        // Initial placement
+        setTimeout(() => {
+            for (const id in initialPositions) {
+                const el = document.getElementById(id);
+                el.dataset.x = initialPositions[id].x;
+                el.dataset.y = initialPositions[id].y;
+                setPos(el, initialPositions[id].x, initialPositions[id].y);
+            }
+        }, 100);
+
         field.addEventListener('pointerdown', onDown);
         storage.addEventListener('pointerdown', onDown);
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
 
-        document.getElementById('excel-upload').addEventListener('change', (e) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const workbook = XLSX.read(new Uint8Array(ev.target.result), {type: 'array'});
-                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { raw: false, defval: "" });
-                scenarios = json.map(row => {
-                    const f = (ks) => {
-                        let k = Object.keys(row).find(rk => ks.some(s => rk.toLowerCase().includes(s)));
-                        return k ? row[k] : "-";
-                    };
-                    return { inning: f(['inn']), score: f(['score']), outs: f(['outs']), runners: f(['runner', 'on base']), bip: f(['situation', 'play']) };
-                });
-                scenarios.sort(() => Math.random() - 0.5);
-                if(scenarios.length) display(scenarios[0]);
-            };
-            reader.readAsArrayBuffer(e.target.files[0]);
+        // Reset Logic
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            for (const id in initialPositions) {
+                const el = document.getElementById(id);
+                setPos(el, initialPositions[id].x, initialPositions[id].y);
+            }
+            const runners = [document.getElementById('r1'), document.getElementById('r2'), document.getElementById('r3')];
+            runners.forEach(r => { r.style.position = 'static'; storage.appendChild(r); });
         });
 
-        document.getElementById('new-scenario-btn').addEventListener('click', () => {
-            if (scenarios.length) { scenarioIndex = (scenarioIndex + 1) % scenarios.length; display(scenarios[scenarioIndex]); }
-        });
-
+        // Snapshot Logic
         document.getElementById('snapshot-btn').addEventListener('click', () => {
             const btn = document.getElementById('snapshot-btn');
             btn.innerText = "📸 Saving...";
-            const now = new Date();
-            const timeStr = now.toLocaleDateString() + "_" + now.getHours() + "-" + now.getMinutes();
             html2canvas(document.querySelector("#capture-area")).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Baseball_Play_${timeStr}.png`;
+                link.download = `Play_${Date.now()}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
                 btn.innerText = "📸 Snapshot";
             });
-        });
-
-        function display(s) {
-            document.getElementById('disp-inning').innerText = s.inning;
-            document.getElementById('disp-score').innerText = s.score;
-            document.getElementById('disp-outs').innerText = s.outs;
-            document.getElementById('disp-runners').innerText = s.runners;
-            document.getElementById('disp-bip').innerText = s.bip;
-            autoPlaceRunners(s.runners);
-        }
-
-        function autoPlaceRunners(text) {
-            const r1 = document.getElementById('r1');
-            const r2 = document.getElementById('r2');
-            const r3 = document.getElementById('r3');
-            [r1, r2, r3].forEach(r => { r.style.position = 'static'; storage.appendChild(r); });
-            const low = text.toUpperCase();
-            if (low.includes("LOADED")) { moveR(r1, "1st"); moveR(r2, "2nd"); moveR(r3, "3rd"); }
-            else {
-                if (low.includes("1B")) moveR(r1, "1st");
-                if (low.includes("2B")) moveR(r2, "2nd");
-                if (low.includes("3B")) moveR(r3, "3rd");
-            }
-        }
-
-        function moveR(el, base) {
-            el.style.position = 'absolute'; field.appendChild(el);
-            setPos(el, baseCoords[base].x, baseCoords[base].y);
-        }
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            for (const id in initialPositions) setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
-            autoPlaceRunners("None");
         });
     }
     init();
 </script>
 </body>
 </html>
+
