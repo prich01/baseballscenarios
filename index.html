@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baseball Strategy - Pro v1.6 (Full Reset)</title>
+    <title>Baseball Strategy - Pro v1.7 (Setup Mode)</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -24,13 +24,13 @@
 
         .right-panel { flex: 1; display: flex; justify-content: center; align-items: center; background: #9e9e9e; border-radius: 8px; padding: 15px; }
         
-        /* Field Elements */
         #field-container { 
             position: relative; width: 850px; height: 450px; 
             background-color: #2e7d32; border: 4px solid #212121; border-radius: 4px; 
             overflow: hidden; touch-action: none; user-select: none; 
         }
         
+        /* Field Markings */
         .foul-line { position: absolute; background-color: rgba(255,255,255,0.9); width: 2px; height: 1000px; top: 388px; left: 50%; transform-origin: top center; z-index: 1; }
         .first-base-line { transform: translate(-50%, 0) rotate(135deg) translateX(22px); }
         .third-base-line { transform: translate(-50%, 0) rotate(-135deg) translateX(-22px); }
@@ -47,7 +47,6 @@
             border-radius: 50%; display: flex; justify-content: center; align-items: center; 
             font-weight: bold; font-size: 11px; z-index: 20; touch-action: none; 
         }
-        
         .player.runner { position: static; border: 2px solid #b71c1c; color: #b71c1c; background: #ffebee; }
         #field-container .player.runner { position: absolute; }
         .ball { width: 16px; height: 16px; z-index: 30; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
@@ -55,17 +54,17 @@
         .bottom-panel { height: 110px; background: white; padding: 10px; border-radius: 8px; flex-shrink: 0; }
         #coaching-notes { width: 100%; height: 100%; resize: none; border: 1px solid #ccc; padding: 10px; border-radius: 4px; font-family: inherit; }
         
-        /* Control Buttons */
+        /* Buttons */
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
         button, .upload-label { padding: 10px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; text-align: center; }
         .upload-label { background: #388e3c; color: white; }
         #new-scenario-btn { background: #1565c0; color: white; }
+        #set-start-btn { background: #00897b; color: white; grid-column: span 2; font-size: 13px; border: 2px solid #004d40; }
         #animate-btn { background: #d32f2f; color: white; grid-column: span 2; font-size: 14px; }
         #snapshot-btn { background: #ff9800; color: white; }
         #reset-btn { background: #616161; color: white; }
 
-        .speed-control { grid-column: span 2; background: #f5f5f5; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: bold; color: #333; margin-top: 5px; }
-        .speed-control input { flex: 1; cursor: pointer; }
+        .speed-control { grid-column: span 2; background: #f5f5f5; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: bold; color: #333; }
     </style>
 </head>
 <body>
@@ -81,19 +80,21 @@
                 </div>
                 <div class="scenario-row"><div class="score-item">RUNNERS<span class="val" id="disp-runners">-</span></div></div>
                 <div class="scenario-row"><div class="score-item">SITUATION<span class="val" id="disp-bip" style="color:#64ffda; font-size:12px;">Ready</span></div></div>
-                <div class="ver-tag">v1.6 - Full Reset</div>
+                <div class="ver-tag">v1.7 - Setup Mode</div>
             </div>
             <div class="box">
                 <div class="runner-storage" style="display:flex; gap:10px; justify-content:center;">
-                    <div class="player runner" id="r1" style="cursor:grab">R1</div>
-                    <div class="player runner" id="r2" style="cursor:grab">R2</div>
-                    <div class="player runner" id="r3" style="cursor:grab">R3</div>
+                    <div class="player runner" id="r1">R1</div>
+                    <div class="player runner" id="r2">R2</div>
+                    <div class="player runner" id="r3">R3</div>
                 </div>
             </div>
             <div class="controls">
                 <label for="excel-upload" class="upload-label">📁 Upload Excel</label>
                 <input type="file" id="excel-upload" style="display:none" accept=".xlsx, .xls" />
                 <button id="new-scenario-btn">🔄 Next Play</button>
+                
+                <button id="set-start-btn">📍 Set Start Positions (Lock Setup)</button>
                 <button id="animate-btn">▶ Play Animation</button>
                 
                 <div class="speed-control">
@@ -117,16 +118,16 @@
                 <div class="base third-base"></div>
                 <div class="home-plate"></div>
                 
-                <div class="player" id="p" style="cursor:grab">P</div><div class="player" id="c" style="cursor:grab">C</div>
-                <div class="player" id="1b" style="cursor:grab">1B</div><div class="player" id="2b" style="cursor:grab">2B</div>
-                <div class="player" id="3b" style="cursor:grab">3B</div><div class="player" id="ss" style="cursor:grab">SS</div>
-                <div class="player" id="lf" style="cursor:grab">LF</div><div class="player" id="cf" style="cursor:grab">CF</div><div class="player" id="rf" style="cursor:grab">RF</div>
-                <div class="ball" id="baseball" style="cursor:grab"></div>
+                <div class="player" id="p">P</div><div class="player" id="c">C</div>
+                <div class="player" id="1b">1B</div><div class="player" id="2b">2B</div>
+                <div class="player" id="3b">3B</div><div class="player" id="ss">SS</div>
+                <div class="player" id="lf">LF</div><div class="player" id="cf">CF</div><div class="player" id="rf">RF</div>
+                <div class="ball" id="baseball"></div>
             </div>
         </div>
     </div>
     <div class="bottom-panel">
-        <textarea id="coaching-notes" placeholder="Notes..."></textarea>
+        <textarea id="coaching-notes" placeholder="1. Set your scenario. 2. Click 'Set Start'. 3. Move players to record the play."></textarea>
     </div>
 </div>
 
@@ -135,7 +136,6 @@
     const storage = document.querySelector('.runner-storage');
     const speedSlider = document.getElementById('speed-slider');
     
-    // STANDARD HOME POSITIONS
     const initialPositions = {
         'p': {x:425, y:295}, 'c': {x:425, y:380}, 'cf': {x:425, y:45},
         '1b': {x:530, y:280}, '3b': {x:320, y:280}, '2b': {x:480, y:210},
@@ -159,27 +159,23 @@
         return { left, top };
     }
 
-    // Capture the exact location of every element to start recording
-    function initPaths() {
+    // THE MAGIC FIX: Resets paths to current location only
+    function lockStartPositions() {
         const pieces = document.querySelectorAll('.player, .ball');
+        playerPaths = {}; // Clear old history
         pieces.forEach(p => {
-            if (p.style.left) {
+            if (p.style.left && p.parentElement.id === 'field-container') {
                 playerPaths[p.id] = [{ left: p.style.left, top: p.style.top }];
             }
         });
+        alert("Starting line-up locked! Any movement you make now will be recorded for the animation.");
     }
 
     function autoPlaceRunners(text) {
         const r1 = document.getElementById('r1');
         const r2 = document.getElementById('r2');
         const r3 = document.getElementById('r3');
-        // Return to storage first
-        [r1, r2, r3].forEach(r => { 
-            r.style.position = 'static'; 
-            storage.appendChild(r); 
-            delete playerPaths[r.id]; // Remove path data if in dugout
-        });
-        
+        [r1, r2, r3].forEach(r => { r.style.position = 'static'; storage.appendChild(r); });
         const low = text ? text.toUpperCase() : "";
         if (low.includes("LOADED")) { moveR(r1, "1st"); moveR(r2, "2nd"); moveR(r3, "3rd"); }
         else {
@@ -194,7 +190,6 @@
         setPos(el, baseCoords[base].x, baseCoords[base].y);
     }
 
-    // Drag events
     const onDown = (e) => {
         if (isPlaying) return;
         const target = e.target.closest('.player, .ball');
@@ -203,6 +198,7 @@
         if (activeItem.classList.contains('runner') && activeItem.style.position !== 'absolute') {
             activeItem.style.position = 'absolute'; field.appendChild(activeItem);
         }
+        // Start a fresh recording from where the player is currently standing
         playerPaths[activeItem.id] = [{ left: activeItem.style.left, top: activeItem.style.top }];
         activeItem.setPointerCapture(e.pointerId); e.preventDefault();
     };
@@ -211,12 +207,11 @@
         if (!activeItem || isPlaying) return;
         const rect = field.getBoundingClientRect();
         const coords = setPos(activeItem, (e.clientX - rect.left), (e.clientY - rect.top));
-        playerPaths[activeItem.id].push(coords);
+        if (playerPaths[activeItem.id]) playerPaths[activeItem.id].push(coords);
     };
 
     const onUp = (e) => { if (activeItem) { activeItem.releasePointerCapture(e.pointerId); activeItem = null; } };
 
-    // Playback Engine
     async function playRecordedPaths() {
         if (isPlaying) return;
         isPlaying = true;
@@ -252,16 +247,16 @@
     }
 
     function init() {
-        // Initial setup
         for (const id in initialPositions) setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
-        initPaths();
-
+        
         field.addEventListener('pointerdown', onDown);
         storage.addEventListener('pointerdown', onDown);
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
 
-        // Upload
+        document.getElementById('set-start-btn').addEventListener('click', lockStartPositions);
+        document.getElementById('animate-btn').addEventListener('click', playRecordedPaths);
+
         document.getElementById('excel-upload').addEventListener('change', (e) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
@@ -283,12 +278,10 @@
             if (scenarios.length) { scenarioIndex = (scenarioIndex + 1) % scenarios.length; display(scenarios[scenarioIndex]); }
         });
 
-        document.getElementById('animate-btn').addEventListener('click', playRecordedPaths);
-
         document.getElementById('snapshot-btn').addEventListener('click', () => {
             html2canvas(document.querySelector("#capture-area")).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Tactical_Play.png`;
+                link.download = `Play_Diagram.png`;
                 link.href = canvas.toDataURL();
                 link.click();
             });
@@ -301,24 +294,14 @@
             document.getElementById('disp-runners').innerText = s.runners;
             document.getElementById('disp-bip').innerText = s.bip;
             autoPlaceRunners(s.runners);
-            setTimeout(initPaths, 200); // Record new starting positions
+            setTimeout(lockStartPositions, 200); // Automatically lock start when a new scenario is loaded
         }
 
-        // FULL RESET LOGIC
         document.getElementById('reset-btn').addEventListener('click', () => {
-            // 1. Move fielders back to home
-            for (const id in initialPositions) {
-                setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
-            }
-            // 2. Return runners to reservoir
+            for (const id in initialPositions) setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
             autoPlaceRunners("None");
-            // 3. Reset scenario text
-            document.getElementById('disp-bip').innerText = "Ready";
-            // 4. Wipe all recorded paths
             playerPaths = {};
-            initPaths();
-            
-            console.log("Field and Paths fully reset to home positions.");
+            document.getElementById('disp-bip').innerText = "Ready";
         });
     }
 
@@ -326,6 +309,7 @@
 </script>
 </body>
 </html>
+
 
 
 
