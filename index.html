@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baseball Strategy - Pro v1.2</title>
+    <title>Baseball Strategy - Pro v1.3 (Animated)</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -13,19 +13,20 @@
         
         #capture-area { display: flex; flex-direction: column; width: 100vw; max-width: 1200px; height: 98vh; gap: 10px; padding: 10px; background-color: #cfd8dc; position: relative; }
         
+        /* Layout Sections */
         .top-section { display: flex; flex: 1; gap: 15px; min-height: 0; }
         .left-panel { flex: 0 0 300px; display: flex; flex-direction: column; gap: 10px; }
         
+        /* Scoreboard */
         .box { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .scoreboard { background-color: #1a1a1a; color: #ffd700; padding: 12px; border-radius: 8px; border: 3px solid #333; font-family: 'Courier New', monospace; position: relative; }
         .score-row, .scenario-row { display: flex; justify-content: space-around; margin-bottom: 5px; text-align: center; }
         .val { font-size: 16px; color: #ffd700; display: block; font-weight: bold; min-height: 20px; }
-        
-        /* The Version Tag */
         .ver-tag { position: absolute; bottom: 3px; right: 5px; font-size: 8px; color: #444; font-family: sans-serif; }
 
         .right-panel { flex: 1; display: flex; justify-content: center; align-items: center; background: #9e9e9e; border-radius: 8px; padding: 15px; }
         
+        /* Field Elements */
         #field-container { 
             position: relative; width: 850px; height: 450px; 
             background-color: #2e7d32; border: 4px solid #212121; border-radius: 4px; 
@@ -42,20 +43,34 @@
         .third-base { top: 295px; left: calc(50% - 105px); }
         .home-plate { position: absolute; top: 390px; left: 50%; width: 20px; height: 20px; background-color: white; transform: translate(-50%, -100%); clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 50% 100%, 0% 50%); z-index: 2; }
 
-        .player { position: absolute; width: 30px; height: 30px; background: white; border: 2px solid #0d47a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 11px; z-index: 20; touch-action: none; }
+        /* Players and Animation Logic */
+        .player, .ball { 
+            position: absolute; width: 30px; height: 30px; background: white; border: 2px solid #0d47a1; 
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; 
+            font-weight: bold; font-size: 11px; z-index: 20; touch-action: none; 
+            transition: none; /* No transition while dragging */
+        }
+        
+        /* Apply smooth transition only when the 'animating' class is active */
+        .animating .player, .animating .ball {
+            transition: left 1.5s ease-in-out, top 1.5s ease-in-out !important;
+        }
+
         .player.runner { position: static; border: 2px solid #b71c1c; color: #b71c1c; background: #ffebee; }
         #field-container .player.runner { position: absolute; }
 
-        .ball { position: absolute; width: 16px; height: 16px; background: white; border: 1px solid #ccc; border-radius: 50%; z-index: 30; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); touch-action: none; display: flex; justify-content: center; align-items: center; }
+        .ball { width: 16px; height: 16px; z-index: 30; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .ball::before { content: ')('; color: red; font-size: 8px; font-weight: bold; transform: rotate(45deg); }
 
         .bottom-panel { height: 110px; background: white; padding: 10px; border-radius: 8px; flex-shrink: 0; }
         #coaching-notes { width: 100%; height: 100%; resize: none; border: 1px solid #ccc; padding: 10px; border-radius: 4px; font-family: inherit; }
         
+        /* Control Buttons */
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
         button, .upload-label { padding: 10px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; text-align: center; }
         .upload-label { background: #388e3c; color: white; }
         #new-scenario-btn { background: #1565c0; color: white; }
+        #animate-btn { background: #673ab7; color: white; grid-column: span 2; font-size: 14px; }
         #snapshot-btn { background: #ff9800; color: white; }
         #reset-btn { background: #616161; color: white; }
     </style>
@@ -73,7 +88,7 @@
                 </div>
                 <div class="scenario-row"><div class="score-item">RUNNERS<span class="val" id="disp-runners">-</span></div></div>
                 <div class="scenario-row"><div class="score-item">SITUATION<span class="val" id="disp-bip" style="color:#64ffda; font-size:12px;">Ready</span></div></div>
-                <div class="ver-tag">v1.2</div>
+                <div class="ver-tag">v1.3 - Animated</div>
             </div>
             <div class="box">
                 <div class="runner-storage" style="display:flex; gap:10px; justify-content:center;">
@@ -86,6 +101,7 @@
                 <label for="excel-upload" class="upload-label">📁 Upload Excel</label>
                 <input type="file" id="excel-upload" style="display:none" accept=".xlsx, .xls" />
                 <button id="new-scenario-btn">🔄 Next Play</button>
+                <button id="animate-btn">▶ Play Animation</button>
                 <button id="snapshot-btn">📸 Snapshot</button>
                 <button id="reset-btn">🧹 Reset Field</button>
             </div>
@@ -110,7 +126,7 @@
         </div>
     </div>
     <div class="bottom-panel">
-        <textarea id="coaching-notes" placeholder="Type coaching notes here before taking a snapshot..."></textarea>
+        <textarea id="coaching-notes" placeholder="Type coaching notes here... Your notes will be saved in the snapshot!"></textarea>
     </div>
 </div>
 
@@ -128,16 +144,31 @@
     let scenarios = [];
     let scenarioIndex = 0;
     let activeItem = null;
+    
+    // Animation state tracking
+    let startPositions = {}; 
+    let finalPositions = {};
 
     function setPos(el, x, y) {
         const offset = el.classList.contains('ball') ? 8 : 15;
-        el.style.left = (x - offset) + 'px'; el.style.top = (y - offset) + 'px';
+        el.style.left = (x - offset) + 'px'; 
+        el.style.top = (y - offset) + 'px';
     }
 
     function cleanZeros(v) {
         if (!v) return "-";
-        if (v.includes(":")) return v.split(":").map(p => parseInt(p, 10).toString()).join(":");
+        if (v.toString().includes(":")) return v.split(":").map(p => parseInt(p, 10).toString()).join(":");
         return isNaN(v) ? v : parseInt(v, 10).toString();
+    }
+
+    // Capture the current location of every movable piece
+    function capturePositions(targetObject) {
+        const pieces = document.querySelectorAll('.player, .ball');
+        pieces.forEach(p => {
+            if (p.style.left) {
+                targetObject[p.id] = { left: p.style.left, top: p.style.top };
+            }
+        });
     }
 
     function autoPlaceRunners(text) {
@@ -145,7 +176,7 @@
         const r2 = document.getElementById('r2');
         const r3 = document.getElementById('r3');
         [r1, r2, r3].forEach(r => { r.style.position = 'static'; storage.appendChild(r); });
-        const low = text.toUpperCase();
+        const low = text ? text.toUpperCase() : "";
         if (low.includes("LOADED")) { moveR(r1, "1st"); moveR(r2, "2nd"); moveR(r3, "3rd"); }
         else {
             if (low.includes("1B")) moveR(r1, "1st");
@@ -159,6 +190,7 @@
         setPos(el, baseCoords[base].x, baseCoords[base].y);
     }
 
+    // Drag and Drop Logic
     const onDown = (e) => {
         const target = e.target.closest('.player, .ball');
         if (!target) return;
@@ -175,15 +207,55 @@
         setPos(activeItem, (e.clientX - rect.left), (e.clientY - rect.top));
     };
 
-    const onUp = (e) => { if (activeItem) { activeItem.releasePointerCapture(e.pointerId); activeItem = null; } };
+    const onUp = (e) => { 
+        if (activeItem) { 
+            activeItem.releasePointerCapture(e.pointerId); 
+            // Save the user's manual adjustment as the 'final' tactical position
+            finalPositions[activeItem.id] = { left: activeItem.style.left, top: activeItem.style.top };
+            activeItem = null; 
+        } 
+    };
+
+    // Animation Engine
+    async function runPlayAnimation() {
+        const captureArea = document.getElementById('capture-area');
+        const pieces = document.querySelectorAll('.player, .ball');
+
+        // 1. Temporarily disable animation to snap back to start
+        captureArea.classList.remove('animating');
+        pieces.forEach(p => {
+            if (startPositions[p.id]) {
+                p.style.left = startPositions[p.id].left;
+                p.style.top = startPositions[p.id].top;
+            }
+        });
+
+        // 2. Force reflow
+        void captureArea.offsetWidth;
+
+        // 3. Re-enable animation and slide to user-defined positions
+        captureArea.classList.add('animating');
+        pieces.forEach(p => {
+            if (finalPositions[p.id]) {
+                p.style.left = finalPositions[p.id].left;
+                p.style.top = finalPositions[p.id].top;
+            }
+        });
+
+        // 4. Cleanup after animation ends (1.5s)
+        setTimeout(() => { captureArea.classList.remove('animating'); }, 1500);
+    }
 
     function init() {
+        // Initial Layout
         for (const id in initialPositions) setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
+        
         field.addEventListener('pointerdown', onDown);
         storage.addEventListener('pointerdown', onDown);
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
 
+        // File Upload Logic
         document.getElementById('excel-upload').addEventListener('change', (e) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
@@ -206,17 +278,16 @@
             if (scenarios.length) { scenarioIndex = (scenarioIndex + 1) % scenarios.length; display(scenarios[scenarioIndex]); }
         });
 
+        document.getElementById('animate-btn').addEventListener('click', runPlayAnimation);
+
         document.getElementById('snapshot-btn').addEventListener('click', () => {
             const btn = document.getElementById('snapshot-btn');
-            btn.innerText = "📸 Saving...";
-            
-            // Get current timestamp for filename
-            const now = new Date();
-            const timeStr = now.toLocaleDateString() + "_" + now.getHours() + "-" + now.getMinutes();
+            btn.innerText = "⏳ Saving...";
+            const timeStr = new Date().toLocaleTimeString().replace(/:/g, '-');
 
             html2canvas(document.querySelector("#capture-area")).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Baseball_Play_${timeStr}.png`;
+                link.download = `Play_Diagram_${timeStr}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
                 btn.innerText = "📸 Snapshot";
@@ -230,6 +301,12 @@
             document.getElementById('disp-runners').innerText = s.runners;
             document.getElementById('disp-bip').innerText = s.bip;
             autoPlaceRunners(s.runners);
+            
+            // Capture the "Start" state for the play animation
+            setTimeout(() => {
+                capturePositions(startPositions);
+                capturePositions(finalPositions); // Initially, final is same as start
+            }, 100);
         }
 
         document.getElementById('reset-btn').addEventListener('click', () => {
@@ -237,12 +314,10 @@
             autoPlaceRunners("None");
         });
     }
+
     init();
 </script>
 </body>
 </html>
-
-
-
 
 
