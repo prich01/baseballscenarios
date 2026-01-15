@@ -206,7 +206,6 @@
     let scenarios = [];
     let scenarioIndex = 0;
 
-    // SCOREBOARD LOGIC
     function changeInning(dir) {
         let el = document.getElementById('val-inning');
         let val = parseInt(el.innerText) + dir;
@@ -242,7 +241,6 @@
         lockStartPositions();
     }
 
-    // SHARED UTILS
     function setPos(el, x, y) {
         const offset = el.classList.contains('ball') ? 8 : 15;
         el.style.left = (x - offset) + 'px'; el.style.top = (y - offset) + 'px';
@@ -258,7 +256,6 @@
         });
     }
 
-    // INTERACTION
     const onDown = (e) => {
         if (isPlaying) return;
         const target = e.target.closest('.player, .ball');
@@ -283,7 +280,6 @@
         let maxFrames = 0;
         Object.values(playerPaths).forEach(p => { if (p.length > maxFrames) maxFrames = p.length; });
         if (maxFrames <= 1) { isPlaying = false; return; }
-
         let frame = 0;
         const loop = () => {
             if (!isPlaying) return;
@@ -307,9 +303,41 @@
         field.addEventListener('pointerdown', onDown);
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
-        document.getElementById('set-start-btn').addEventListener('click', () => { lockStartPositions(); alert("Locked!"); });
+        
+        document.getElementById('set-start-btn').addEventListener('click', () => { lockStartPositions(); alert("Start positions locked!"); });
         document.getElementById('animate-btn').addEventListener('click', playRecordedPaths);
-        document.getElementById('reset-btn').addEventListener('click', () => location.reload());
+        
+        // BUG FIX: SOFT RESET
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            document.getElementById('val-inning').innerText = "1";
+            document.getElementById('val-outs').innerText = "0";
+            document.getElementById('val-vscore').innerText = "0";
+            document.getElementById('val-hscore').innerText = "0";
+            document.getElementById('val-sit').innerText = "Field Reset";
+            document.getElementById('coaching-notes').value = "";
+            for (const id in initialPositions) setPos(document.getElementById(id), initialPositions[id].x, initialPositions[id].y);
+            playerPaths = {};
+            isPlaying = false;
+            [1, 2, 3].forEach(n => {
+                const dot = document.getElementById(`dot-${n}`);
+                const r = document.getElementById(`r${n}`);
+                if (dot.classList.contains('active')) {
+                    dot.classList.remove('active');
+                    r.style.position = 'static';
+                    document.querySelector('.runner-storage').appendChild(r);
+                }
+            });
+            alert("Field cleared! Excel data is still loaded.");
+        });
+
+        document.getElementById('snapshot-btn').addEventListener('click', () => {
+            html2canvas(document.getElementById('capture-area')).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'playbook-snapshot.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        });
 
         document.getElementById('excel-upload').addEventListener('change', (e) => {
             const reader = new FileReader();
@@ -323,13 +351,18 @@
                     };
                     return { inning: f(['inn']), score: f(['score']), outs: f(['outs']), runners: f(['runner', 'on base']), bip: f(['situation', 'play']) };
                 });
-                if(scenarios.length) display(scenarios[0]);
+                if(scenarios.length) { scenarioIndex = 0; display(scenarios[0]); alert("Excel loaded: " + scenarios.length + " plays found."); }
             };
             reader.readAsArrayBuffer(e.target.files[0]);
         });
 
         document.getElementById('new-scenario-btn').addEventListener('click', () => {
-            if (scenarios.length) { scenarioIndex = (scenarioIndex + 1) % scenarios.length; display(scenarios[scenarioIndex]); }
+            if (scenarios.length > 0) { 
+                scenarioIndex = (scenarioIndex + 1) % scenarios.length; 
+                display(scenarios[scenarioIndex]); 
+            } else {
+                alert("Please upload an Excel file first!");
+            }
         });
 
         function display(s) {
@@ -339,14 +372,10 @@
             document.getElementById('val-vscore').innerText = scores[0] || 0;
             document.getElementById('val-hscore').innerText = scores[1] || 0;
             document.getElementById('val-sit').innerText = s.bip;
-            
-            // Clear existing runners
             [1,2,3].forEach(n => {
                 const dot = document.getElementById(`dot-${n}`);
-                const r = document.getElementById(`r${n}`);
                 if (dot.classList.contains('active')) toggleBase(n);
             });
-            // Add runners from excel
             const text = s.runners.toUpperCase();
             if (text.includes("LOADED")) { toggleBase(1); toggleBase(2); toggleBase(3); }
             else {
