@@ -304,10 +304,12 @@
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', onUp);
         
-        document.getElementById('set-start-btn').addEventListener('click', () => { lockStartPositions(); alert("Start positions locked!"); });
+        document.getElementById('set-start-btn').addEventListener('click', () => { 
+            lockStartPositions(); 
+        });
+        
         document.getElementById('animate-btn').addEventListener('click', playRecordedPaths);
         
-        // BUG FIX: SOFT RESET
         document.getElementById('reset-btn').addEventListener('click', () => {
             document.getElementById('val-inning').innerText = "1";
             document.getElementById('val-outs').innerText = "0";
@@ -327,7 +329,6 @@
                     document.querySelector('.runner-storage').appendChild(r);
                 }
             });
-            alert("Field cleared! Excel data is still loaded.");
         });
 
         document.getElementById('snapshot-btn').addEventListener('click', () => {
@@ -351,7 +352,7 @@
                     };
                     return { inning: f(['inn']), score: f(['score']), outs: f(['outs']), runners: f(['runner', 'on base']), bip: f(['situation', 'play']) };
                 });
-                if(scenarios.length) { scenarioIndex = 0; display(scenarios[0]); alert("Excel loaded: " + scenarios.length + " plays found."); }
+                if(scenarios.length) { scenarioIndex = 0; display(scenarios[0]); }
             };
             reader.readAsArrayBuffer(e.target.files[0]);
         });
@@ -360,8 +361,6 @@
             if (scenarios.length > 0) { 
                 scenarioIndex = (scenarioIndex + 1) % scenarios.length; 
                 display(scenarios[scenarioIndex]); 
-            } else {
-                alert("Please upload an Excel file first!");
             }
         });
 
